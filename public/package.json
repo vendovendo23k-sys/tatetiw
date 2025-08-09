@@ -1,0 +1,17 @@
+{
+  "name": "tateti-server",
+  "version": "1.0.0",
+  "description": "Servidor Tateti con Express y Socket.IO para WhatsApp Bot",
+  "main": "tateti-server.js",
+  "scripts": {
+    "start": "node tateti-server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
+
