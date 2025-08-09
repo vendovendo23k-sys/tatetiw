@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tateti WhatsApp</title>
+<style>
+body { font-family: Arial; text-align: center; background: #f4f4f4; }
+#board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; margin: 20px auto; }
+.cell { width: 100px; height: 100px; background: white; font-size: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.cell.disabled { pointer-events: none; background: #ddd; }
+</style>
+</head>
+<body>
+<h1>Tateti</h1>
+<div id="status">Conectando...</div>
+<div id="board"></div>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const sala = urlParams.get('sala');
+const playerJid = urlParams.get('player');
+const socket = io(); // Se conecta al mismo dominio
+
+const board = document.getElementById('board');
+const status = document.getElementById('status');
+let myTurn = false;
+let symbol = '';
+
+function createBoard() {
+    for (let i=0;i<9;i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        cell.addEventListener('click', () => {
+            if (myTurn && cell.textContent === '') {
+                socket.emit('move', { sala, index: i, symbol });
+            }
+        });
+        board.appendChild(cell);
+    }
+}
+createBoard();
+
+socket.emit('join', { sala, playerJid });
+
+socket.on('start', data => {
+    symbol = data.symbol;
+    myTurn = data.turn;
+    status.textContent = `Eres ${symbol}. ${myTurn ? 'Tu turno' : 'Turno rival'}`;
+});
+
+socket.on('update', data => {
+    document.querySelectorAll('.cell')[data.index].textContent = data.symbol;
+    myTurn = data.turn;
+    status.textContent = myTurn ? 'Tu turno' : 'Turno rival';
+});
+
+socket.on('end', data => {
+    alert(`Ganador: ${data.winnerSymbol}`);
+    // Avisar al servidor Node para notificar al bot
+    fetch(`/tateti-winner?sala=${sala}&winner=${data.winnerJid}`);
+});
+</script>
+</body>
+</html>
