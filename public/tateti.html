@@ -32,10 +32,28 @@
     </footer>
   </main>
 
+  <!-- Overlay de bienvenida -->
+  <div id="welcome" class="welcome-overlay hidden">
+    <div class="welcome-box">
+      <h2>🎯 Bienvenido a <span class="highlight">Tateti ShelbyCash</span></h2>
+      <p>Juega partidas 1 vs 1 y reta a tus amigos del grupo de WhatsApp.</p>
+      <button id="start-btn">🎮 Empezar partida</button>
+      <div id="invite-box" class="hidden">
+        <p>Comparte este enlace para invitar a tu rival:</p>
+        <input type="text" id="invite-link" readonly>
+        <div class="invite-buttons">
+          <button id="copy-link">📋 Copiar enlace</button>
+          <button id="whatsapp-link">💬 Enviar por WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Socket.io -->
   <script src="/socket.io/socket.io.js"></script>
   <!-- Lógica del juego -->
   <script src="tateti.js" type="module"></script>
 </body>
 </html>
+
 
