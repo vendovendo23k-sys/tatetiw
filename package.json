@@ -1,0 +1,15 @@
+{
+  "name": "tateti-html-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "node-fetch": "^2.6.7",
+    "uuid": "^9.0.1"
+  }
+}
+
