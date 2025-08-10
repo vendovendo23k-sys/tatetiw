@@ -1,0 +1,30 @@
+# ==========================
+# Node.js
+# ==========================
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+
+# ==========================
+# Archivos de entorno
+# ==========================
+.env
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Configuración del editor
+# ==========================
+.vscode/
+.idea/
+
+# ==========================
+# Datos temporales y sesiones (Baileys / Playwright)
+# ==========================
+session/
+sora_storage.json
+sora_cookies.json
+*.db
+*.sqlite
+*.log
