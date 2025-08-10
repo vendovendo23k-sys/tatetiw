@@ -28,7 +28,7 @@ body {
   padding: 24px;
 }
 
-/* Layout container */
+/* layout container */
 .container {
   width: 100%;
   max-width: 720px;
@@ -42,7 +42,7 @@ body {
   animation: fadeIn 0.4s ease-in-out;
 }
 
-/* Header */
+/* header */
 header {
   display: flex;
   flex-direction: row;
@@ -73,7 +73,7 @@ header h1 {
   color: #333;
 }
 
-/* Board */
+/* board */
 #board {
   display: grid;
   gap: var(--gap);
@@ -101,13 +101,13 @@ header h1 {
   box-shadow: 0 4px 10px rgba(16, 24, 40, 0.04), inset 0 -2px 0 rgba(16, 24, 40, 0.02);
 }
 
-/* Disabled look */
+/* disabled look */
 .cell.disabled {
   pointer-events: none;
   opacity: 0.75;
 }
 
-/* Hover */
+/* hover */
 .cell:not(.disabled):hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 18px rgba(16, 24, 40, 0.08);
@@ -124,7 +124,7 @@ header h1 {
   animation: popIn 0.2s ease-in-out;
 }
 
-/* Winning highlight */
+/* winning highlight */
 .cell.win {
   background: linear-gradient(90deg, rgba(255, 236, 179, 0.95), rgba(255, 249, 218, 0.95));
   box-shadow: 0 12px 30px rgba(255, 193, 7, 0.12);
@@ -132,7 +132,7 @@ header h1 {
   animation: blink 0.8s ease-in-out infinite alternate;
 }
 
-/* Footer controls */
+/* footer controls */
 .controls {
   display: flex;
   flex-direction: row;
@@ -189,14 +189,12 @@ button.secondary {
   100% { background-color: rgba(255, 249, 218, 1); }
 }
 
-/* Responsive tweaks */
+/* responsive tweaks */
 @media (max-width: 420px) {
   .container {
     padding: 12px;
   }
-
   header h1 {
     font-size: 1.1rem;
   }
 }
-
