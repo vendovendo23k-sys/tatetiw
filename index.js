@@ -7,27 +7,25 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Servir archivos estáticos desde /public
 app.use(express.static(__dirname + '/public'));
 
-let boards = {};
-let salas = {}; // { salaId: { player1, player2 } }
+// Estado del juego
+let boards = {}; // Tablero de cada sala
+let salas = {};  // { salaId: { player1, player2, score: { X:0, O:0 } } }
 
-// --- Función para notificar al bot de WhatsApp (placeholder) ---
+// --- Notificar al bot (placeholder) ---
 async function notificarBot(sala, winnerJid, winnerSymbol) {
-  console.log(`📢 Notificar bot: Sala ${sala}, Ganador ${winnerJid} (${winnerSymbol})`);
-  // Aquí puedes hacer fetch/post a tu bot o usar una conexión directa si el bot
-  // corre en el mismo servidor.
+  console.log(`📢 Bot: Sala ${sala}, Ganador ${winnerJid} (${winnerSymbol})`);
+  // Aquí puedes integrar tu bot de WhatsApp
 }
 
-// Cuando un cliente se conecta
 io.on('connection', socket => {
   console.log('🟢 Usuario conectado');
 
   // Unirse a sala
   socket.on('join', ({ sala, playerJid }) => {
     if (!salas[sala]) {
-      salas[sala] = { player1: playerJid, player2: null };
+      salas[sala] = { player1: playerJid, player2: null, score: { X: 0, O: 0 } };
     } else if (!salas[sala].player2 && salas[sala].player1 !== playerJid) {
       salas[sala].player2 = playerJid;
     }
@@ -35,7 +33,6 @@ io.on('connection', socket => {
     socket.join(sala);
     if (!boards[sala]) boards[sala] = Array(9).fill('');
 
-    // Enviar estado inicial a todos
     io.to(sala).emit('players', {
       player1: salas[sala].player1,
       player2: salas[sala].player2
@@ -43,10 +40,11 @@ io.on('connection', socket => {
 
     let symbol = (playerJid === salas[sala].player1) ? 'X' : 'O';
     let turn = (symbol === 'X');
-    socket.emit('start', { 
-      symbol, 
-      turn, 
-      players: salas[sala]
+    socket.emit('start', {
+      symbol,
+      turn,
+      players: salas[sala],
+      score: salas[sala].score
     });
   });
 
@@ -62,32 +60,49 @@ io.on('connection', socket => {
       [0,3,6],[1,4,7],[2,5,8],
       [0,4,8],[2,4,6]
     ];
+
+    // Revisar si alguien ganó
     for (let pattern of winPatterns) {
       const [a,b,c] = pattern;
       if (boards[sala][a] && boards[sala][a] === boards[sala][b] && boards[sala][a] === boards[sala][c]) {
         const winnerSymbol = boards[sala][a];
         const winnerJid = (winnerSymbol === 'X') ? salas[sala].player1 : salas[sala].player2;
 
+        // Sumar punto al ganador
+        if (salas[sala]?.score) {
+          salas[sala].score[winnerSymbol]++;
+        }
+
         io.to(sala).emit('end', {
           winnerSymbol,
           winnerJid,
-          winLine: pattern
+          winLine: pattern,
+          score: salas[sala].score
         });
 
-        // Notificar al bot (aquí se integra con WhatsApp más adelante)
         notificarBot(sala, winnerJid, winnerSymbol);
 
-        delete boards[sala];
-        delete salas[sala];
-        break;
+        boards[sala] = Array(9).fill('');
+        return;
       }
+    }
+
+    // Detectar empate (si no hay celdas vacías)
+    if (!boards[sala].includes('')) {
+      io.to(sala).emit('draw', {
+        message: '¡Empate!',
+        score: salas[sala].score
+      });
+      boards[sala] = Array(9).fill('');
     }
   });
 
   // Reinicio manual
   socket.on('reset', ({ sala }) => {
     boards[sala] = Array(9).fill('');
-    io.to(sala).emit('players', salas[sala] || { player1: null, player2: null });
+    io.to(sala).emit('resetBoard', {
+      score: salas[sala]?.score || { X: 0, O: 0 }
+    });
   });
 
   socket.on('disconnect', () => {
@@ -104,4 +119,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`✅ Servidor Tateti escuchando en puerto ${PORT}`);
 });
+
 
