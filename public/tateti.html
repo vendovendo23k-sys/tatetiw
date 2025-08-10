@@ -3,27 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tateti • 1 vs 1</title>
+  <title>🎯 Tateti • 1 vs 1</title>
   <link rel="stylesheet" href="tateti.css">
 </head>
 <body>
   <main class="container">
+    <!-- Encabezado -->
     <header>
-      <h1>Tateti</h1>
+      <h1>🎯 Tateti</h1>
       <div id="meta">
         <div id="status">Conectando…</div>
-        <div id="players">—</div>
+        <div id="players">Esperando jugadores...</div>
       </div>
     </header>
 
+    <!-- Tablero -->
     <section id="board" aria-label="Tablero de tateti"></section>
 
+    <!-- Controles -->
     <footer class="controls">
       <div id="msg" class="msg">Esperando jugadores...</div>
-      <button id="btn-reset" class="hidden">Reiniciar</button>
+      <button id="btn-reset" class="hidden">🔄 Reiniciar</button>
     </footer>
   </main>
 
+  <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="tateti.js" type="module"></script>
 </body>

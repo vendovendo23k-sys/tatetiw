@@ -1,17 +1,18 @@
-// tateti.js (cliente) — usa ES module (type=module in <script>)
+// tateti.js (cliente) — usa ES module
 /*
   Cliente Tateti:
-  - Se conecta al socket.io del mismo dominio
+  - Se conecta a socket.io en el mismo dominio
   - Parámetros por URL: ?sala=ID&player=JID
-  - Maneja UI, turnos, animaciones, resalta victoria
-  - Llama a /tateti-winner?sala=...&winner=... al terminar (opcional)
+  - Maneja UI, turnos, animaciones y resalta victoria
+  - Puede notificar al servidor el ganador (opcional)
 */
 
-const socket = io(); // se conecta al mismo origen
+const socket = io(); // mismo origen
 const params = new URLSearchParams(location.search);
-const sala = params.get('sala') || 'local-' + Math.random().toString(36).slice(2,8);
-const playerJid = params.get('player') || 'guest-' + Math.random().toString(36).slice(2,6);
+const sala = params.get('sala') || 'local-' + Math.random().toString(36).slice(2, 8);
+const playerJid = params.get('player') || 'guest-' + Math.random().toString(36).slice(2, 6);
 
+// UI elements
 const boardEl = document.getElementById('board');
 const statusEl = document.getElementById('status');
 const playersEl = document.getElementById('players');
@@ -23,49 +24,61 @@ let myTurn = false;
 let localBoard = Array(9).fill('');
 let started = false;
 
-// build board cells
-for (let i=0;i<9;i++){
+// crear tablero dinámicamente
+for (let i = 0; i < 9; i++) {
   const cell = document.createElement('div');
   cell.className = 'cell';
   cell.dataset.index = i;
   cell.addEventListener('click', () => {
-    if (!started) return;
-    if (!myTurn) return;
-    if (localBoard[i] !== '') return;
-    // emitimos acción
+    if (!started || !myTurn || localBoard[i] !== '') return;
     socket.emit('move', { sala, index: i, symbol: mySymbol });
   });
   boardEl.appendChild(cell);
 }
 
-function setStatus(text){
+// helpers de UI
+function setStatus(text) {
   statusEl.textContent = text;
 }
-function setPlayersText(p1, p2){
+
+function setPlayersText(p1, p2) {
   playersEl.textContent = `Jugador 1: ${short(p1)} ${p1 === playerJid ? '(tú)' : ''} · Jugador 2: ${short(p2) || '—'}`;
 }
-function short(jid){
+
+function short(jid) {
   if (!jid) return '';
-  try { return decodeURIComponent(jid).split('@')[0]; } catch(e){ return jid.split('@')[0]; }
-}
-function renderBoard(){
-  const cells = boardEl.children;
-  for (let i=0;i<9;i++){
-    cells[i].textContent = localBoard[i] || '';
-    cells[i].classList.toggle('disabled', !!localBoard[i]);
-    cells[i].classList.remove('win','x','o');
-    if (localBoard[i]) cells[i].classList.add(localBoard[i] === 'X' ? 'x' : 'o');
+  try {
+    return decodeURIComponent(jid).split('@')[0];
+  } catch {
+    return jid.split('@')[0];
   }
 }
 
-// socket events
+function renderBoard() {
+  const cells = boardEl.children;
+  for (let i = 0; i < 9; i++) {
+    cells[i].textContent = localBoard[i] || '';
+    cells[i].classList.remove('win', 'x', 'o', 'disabled');
+    if (localBoard[i]) {
+      cells[i].classList.add(localBoard[i] === 'X' ? 'x' : 'o', 'disabled');
+    }
+  }
+}
+
+function highlightWin(line) {
+  for (const idx of line) {
+    const el = boardEl.children[idx];
+    if (el) el.classList.add('win');
+  }
+}
+
+// Eventos socket
 socket.on('connect', () => {
-  setStatus('Conectado. Solicitando unión a sala...');
+  setStatus('Conectado. Entrando a la sala...');
   socket.emit('join', { sala, playerJid });
 });
 
 socket.on('start', data => {
-  // data: { symbol: 'X'|'O', turn: boolean, players: {p1,p2} }
   mySymbol = data.symbol;
   myTurn = !!data.turn;
   started = true;
@@ -78,67 +91,56 @@ socket.on('start', data => {
 });
 
 socket.on('update', data => {
-  // data: { index, symbol, turn }
   localBoard[data.index] = data.symbol;
   myTurn = !!data.turn;
-  setStatus(myTurn ? 'Tu turno' : 'Turno rival');
   renderBoard();
+  setStatus(myTurn ? 'Tu turno' : 'Turno rival');
 });
 
 socket.on('end', data => {
-  // data: { winnerSymbol, winnerJid, winLine? }
   started = false;
   myTurn = false;
-  setStatus(`Partida terminada — Ganador: ${data.winnerSymbol}`);
-  msgEl.textContent = `Ganó ${short(data.winnerJid)}`;
+
+  if (data.winnerSymbol) {
+    setStatus(`Ganó ${data.winnerSymbol}`);
+    msgEl.textContent = `Ganador: ${short(data.winnerJid)}`;
+  } else {
+    setStatus('Empate');
+    msgEl.textContent = 'Nadie ganó 😅';
+  }
+
   btnReset.classList.remove('hidden');
 
-  // resaltar línea si viene
-  if (data.winLine && Array.isArray(data.winLine)){
+  if (data.winLine && Array.isArray(data.winLine)) {
     highlightWin(data.winLine);
   }
 
-  // Notificar al endpoint (opcional): servidor ya puede notificar al bot, pero este fetch da una capa extra
+  // opcional: notificar al backend
   try {
-    fetch(`/tateti-winner?sala=${encodeURIComponent(sala)}&winner=${encodeURIComponent(data.winnerJid)}`)
-      .catch(()=>{/* no bloquear UI */});
-  } catch(e){}
+    fetch(`/tateti-winner?sala=${encodeURIComponent(sala)}&winner=${encodeURIComponent(data.winnerJid || '')}`);
+  } catch {}
 });
 
 socket.on('players', data => {
-  // data: { player1, player2 }
   setPlayersText(data.player1, data.player2);
-  if (!data.player2) {
-    msgEl.textContent = 'Esperando segundo jugador...';
-  } else {
-    msgEl.textContent = 'Rival conectado — partida lista';
-  }
+  msgEl.textContent = !data.player2 ? 'Esperando segundo jugador...' : 'Rival conectado — listo para jugar';
 });
 
 socket.on('error', e => {
   setStatus('Error: ' + e);
 });
 
-// Helpers
-function highlightWin(line){
-  for (const idx of line){
-    const el = boardEl.children[idx];
-    if (el) el.classList.add('win');
-  }
-}
-
-btnReset.addEventListener('click', () => {
-  // pedir reinicio al servidor (si quieres que servidor reinicie logica)
-  socket.emit('reset', { sala });
-  btnReset.classList.add('hidden');
-  setStatus('Solicitando reinicio...');
-});
-
-// small safety: reconnect UX
 socket.on('disconnect', () => {
   setStatus('Conexión perdida — reconectando…');
 });
 
-// render initial (empty)
+// Botón reiniciar
+btnReset.addEventListener('click', () => {
+  socket.emit('reset', { sala });
+  btnReset.classList.add('hidden');
+  setStatus('Esperando reinicio...');
+});
+
+// render inicial
 renderBoard();
-setStatus('Conectando al servidor…');
+setStatus('Conectando...');
