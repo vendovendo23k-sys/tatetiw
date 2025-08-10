@@ -27,7 +27,7 @@ body {
   padding: 24px;
 }
 
-/* layout container */
+/* Layout container */
 .container {
   width: 100%;
   max-width: 720px;
@@ -40,7 +40,7 @@ body {
   gap: 18px;
 }
 
-/* header */
+/* Header */
 header {
   display: flex;
   flex-direction: row;
@@ -73,7 +73,7 @@ header h1 {
   color: #fff;
 }
 
-/* board */
+/* Board */
 #board {
   display: grid;
   gap: var(--gap);
@@ -120,7 +120,7 @@ header h1 {
     0 0 40px var(--accent-o);
 }
 
-/* celda ganadora */
+/* Celda ganadora */
 .cell.win {
   background: rgba(255, 223, 0, 0.1);
   box-shadow:
@@ -129,13 +129,13 @@ header h1 {
     0 0 40px var(--win-glow);
 }
 
-/* hover */
+/* Hover */
 .cell:not(.disabled):hover {
   transform: scale(1.05);
   box-shadow: 0 0 10px #fff;
 }
 
-/* footer controls */
+/* Footer controls */
 .controls {
   display: flex;
   flex-direction: row;
@@ -165,4 +165,60 @@ button:hover {
   transform: scale(1.05);
   background: #ff33ff;
 }
+
+/* Overlay de bienvenida */
+.welcome-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.welcome-box {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 0 15px var(--accent-x), 0 0 25px var(--accent-o);
+}
+
+.welcome-box h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.welcome-box .highlight {
+  color: var(--accent-o);
+  text-shadow: 0 0 10px var(--accent-o);
+}
+
+#invite-box {
+  margin-top: 15px;
+}
+
+#invite-link {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.invite-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.hidden {
+  display: none !important;
+}
+
 
