@@ -1,7 +1,6 @@
-// tateti.js (cliente) — corregido y robusto
-
+// tateti.js (cliente) — robusto y listo
 document.addEventListener('DOMContentLoaded', () => {
-  const socket = io(); // se conecta al mismo origen
+  const socket = io(); // conexión al mismo origen
   const params = new URLSearchParams(location.search);
   const sala = params.get('sala') || 'local-' + Math.random().toString(36).slice(2, 8);
   const playerJid = params.get('player') || 'guest-' + Math.random().toString(36).slice(2, 6);
@@ -17,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let localBoard = Array(9).fill('');
   let started = false;
 
-  // Crear tablero inicial (vacío)
+  // Construir tablero
   function buildBoard() {
     if (!boardEl) return;
     boardEl.innerHTML = '';
@@ -35,13 +34,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // UI helpers
   function setStatus(text) {
     if (statusEl) statusEl.textContent = text;
   }
 
   function setPlayersText(p1, p2) {
     if (!playersEl) return;
-    playersEl.textContent = `Jugador 1: ${short(p1)} ${p1 === playerJid ? '(tú)' : ''} · Jugador 2: ${short(p2) || '—'}`;
+    playersEl.textContent =
+      `Jugador 1: ${short(p1)} ${p1 === playerJid ? '(tú)' : ''} · ` +
+      `Jugador 2: ${short(p2) || '—'}`;
   }
 
   function short(jid) {
@@ -60,7 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
       cells[i].textContent = localBoard[i] || '';
       cells[i].classList.toggle('disabled', !!localBoard[i]);
       cells[i].classList.remove('win', 'x', 'o');
-      if (localBoard[i]) cells[i].classList.add(localBoard[i] === 'X' ? 'x' : 'o');
+      if (localBoard[i]) {
+        cells[i].classList.add(localBoard[i] === 'X' ? 'x' : 'o');
+      }
     }
   }
 
@@ -72,11 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Inicializar tablero vacío desde el inicio
+  // Inicial
   buildBoard();
   setStatus('Conectando al servidor…');
 
-  // Eventos socket
+  // Eventos de socket
   socket.on('connect', () => {
     setStatus('Conectado. Solicitando unión a sala...');
     socket.emit('join', { sala, playerJid });
@@ -112,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
       highlightWin(data.winLine);
     }
 
+    // Notificar (opcional)
     try {
       fetch(`/tateti-winner?sala=${encodeURIComponent(sala)}&winner=${encodeURIComponent(data.winnerJid)}`)
         .catch(() => { });
@@ -135,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setStatus('Conexión perdida — reconectando…');
   });
 
+  // Reinicio manual
   if (btnReset) {
     btnReset.addEventListener('click', () => {
       socket.emit('reset', { sala });
